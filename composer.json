@@ -1,0 +1,19 @@
+{
+    "name": "root/2ch-get-img",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Grigory Movchan",
+            "email": "grigory08@ya.ru"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Application\\": "app/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
