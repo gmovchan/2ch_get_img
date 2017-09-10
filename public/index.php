@@ -10,9 +10,11 @@ if (isset($_GET["action"])) {
 
             if (isset($_POST["input2chLink"])) {
                 echo 'Start parse.';
-                $parser = new Parser2ch();
+                $parser = new ThreadParser;
                 echo '<br>';
-                $parser->parseThread($_POST["input2chLink"]);                
+                $code = $parser->parseThread(new ThreadDownloader, $_POST["input2chLink"]);
+                echo '<hr>';
+                echo htmlspecialchars($code);
             } else {
                 echo 'Ссылка не получена.';
             }
