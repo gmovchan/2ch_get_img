@@ -86,7 +86,7 @@ class ThreadDownloader
         echo "Файл найден.";
         return $code;
     }
-    
+
     /*
      * Отадет ссылку на проверку и вызывает функцию скачивания html страницы
      */
@@ -101,18 +101,10 @@ class ThreadDownloader
             return $code;
         }
     }
-    
-    private function downloadFile(string $filePathOn2ch) 
+
+    private function downloadFile(string $url, string $threadIdPath, string $fileName, string $filePath)
     {
-        // Получает ссылка для скачивания
-        $url = $this->scheme2ch . $this->host2ch . $filePathOn2ch;
-        
-        // Получает мся файла с расширением
-        $fileName = explode("/", $filePathOn2ch);
-        $fileName = array_pop($fileName);  
-        
-        // Путь к папке для скаченных файлов
-        $filePath = __DIR__ . "/../storage/$fileName";
+
         $destFile = fopen($filePath, "w");
         $curl = curl_init(); // Инициализирую CURL
         curl_setopt($curl, CURLOPT_HEADER, 0); // Отключаю в выводе header-ы
@@ -133,11 +125,74 @@ class ThreadDownloader
         echo "<br>";
         echo "Файл скачан.";
     }
-    
+
     public function downloadImages(array $imagesLinksArray)
     {
-        foreach ($imagesLinksArray as $link) {
-            $this->downloadFile($link);
+        $threadPaths = $this->parseFilePath($imagesLinksArray[0]);
+
+        if (!file_exists($threadPaths["threadIdPath"])) {
+            mkdir($threadPaths["threadIdPath"], 0700);
         }
+
+        foreach ($imagesLinksArray as $imageLink) {
+            $imagePaths = $this->parseFilePath($imageLink);
+            $this->downloadFile($imagePaths["imageLink"], $imagePaths["threadIdPath"], $imagePaths["fileName"], $imagePaths["filePath"]);
+        }
+        
+        
+        $this->archiveFiles($threadPaths["threadIdPath"], $threadPaths["threadId"]);
     }
+
+    public function parseFilePath($path)
+    {
+        $fileNameExploded = explode("/", $path);
+        $threadIdArrayIndex = count($fileNameExploded) - 2;
+        $threadId = $fileNameExploded[$threadIdArrayIndex]; // id треда
+        $threadIdPath = __DIR__ . "/../storage/$threadId"; // Папка для скачанных файлов
+        $imageLink = $this->scheme2ch . $this->host2ch . $path; // Ссылка на сорцы картинки для скачивания
+        $fileName = array_pop($fileNameExploded); // Имя файла с расширением       
+        $filePath = $threadIdPath . "/" . $fileName; // Путь к папке для скаченных файлов
+        
+        return array(
+            "imageLink" => $imageLink,
+            "threadIdPath" => $threadIdPath,
+            "fileName" => $fileName,
+            "filePath" => $filePath,
+            "threadId" => $threadId
+        );
+    }
+
+    public function archiveFiles(string $pathForArchiving, string $zipName)
+    {
+        $zip = new \ZipArchive();
+        $zipPath = __DIR__ . "/../storage/zip/$zipName.zip";
+
+        if (file_exists($zipPath)) {
+            $zip->open($zipPath, \ZipArchive::OVERWRITE);
+        }
+
+        if ($zip->open($zipPath, \ZipArchive::CREATE) !== true) {
+            echo 'Ошибка. Не удалось создать архив.';
+        }
+        
+        $scandirResult = scandir($pathForArchiving);
+        $filePathsArray = array();
+
+        foreach ($scandirResult as $filePath) {
+            if (!is_dir($filePath)) {
+                $filePathsArray[] = $pathForArchiving . "/" . $filePath;
+            }
+        }
+
+        foreach ($filePathsArray as $filePath) {
+            $fileNameExploded = explode("/", $filePath);
+            $fileName = array_pop($fileNameExploded);
+            $zip->addFile($filePath, $fileName);
+        }
+
+        $zip->close();
+
+        echo 'Архив создан.';
+    }
+
 }
