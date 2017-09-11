@@ -4,17 +4,18 @@ namespace Application;
 
 class ThreadParser
 {
+    private $responseHandler;
 
     function __construct()
     {
-        
+        $this->responseHandler = ResponseHandler::getInstance();
     }
 
     public function parseThread(ThreadDownloader $downloader, $url)
     {
         $code = $downloader->getThreadHtmlCode($url);
         if (is_null($code)) {
-            return null;
+            return false;
         }
 
         $dom = new \DOMDocument();
@@ -38,7 +39,8 @@ class ThreadParser
         
         $downloader->downloadImages($sourceImageLinks);
         
-        return "Файлы скачаны.";
+        $this->responseHandler->addSuccess("Файлы скачаны.");
+        return true;
     }
 
 }

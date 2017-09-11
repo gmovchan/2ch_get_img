@@ -4,19 +4,28 @@ namespace Application;
 
 require __DIR__ . '/../vendor/autoload.php';
 
+$view = new View();
+$responseHandler = ResponseHandler::getInstance();
+$data = array('result' => null,);
+
 if (isset($_GET["action"])) {
     switch ($_GET["action"]) {
         case 'parse':
 
             if (isset($_POST["input2chLink"])) {
-                echo 'Start parse.';
                 $parser = new ThreadParser;
-                echo '<br>';
                 $code = $parser->parseThread(new ThreadDownloader, $_POST["input2chLink"]);
-                echo '<hr>';
-                echo htmlspecialchars($code);
+                
+                if ($code) {
+                    $data['result']['success'] = $responseHandler->getSuccessArray();
+                } else {
+                    $data['result']['errors'] = $responseHandler->getErrorsArray();
+                }
+                $view->generate('statusBar.php', '/indexTemplate.php', $data);
             } else {
-                echo 'Ссылка не получена.';
+                $responseHandler->addError("Не удалось получить ссылку из формы");
+                $data['result']['errors'] = $responseHandler->getErrorsArray();
+                $view->generate('statusBar.php', '/indexTemplate.php', $data);
             }
 
             exit();
@@ -28,4 +37,4 @@ if (isset($_GET["action"])) {
     }
 }
 
-require __DIR__ . '/../app/index_template.php';
+$view->generate('downloadForm.php', '/indexTemplate.php');

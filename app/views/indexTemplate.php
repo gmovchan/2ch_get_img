@@ -12,20 +12,8 @@
     <body>
         <div class="container">
             <!-- Content here -->
-            <div class="row h-100">
-                <div class="col-12 align-self-center">
-                    <div class="w-50 mx-auto">
-                        <form method="POST" action="index.php?action=parse">
-                            <div class="form-group">
-                                <label for="input2chLink">Ссылка на тред</label>
-                                <input type="text" class="form-control" id="input2chLink" name="input2chLink" aria-describedby="input2chLink" placeholder="Enter 2ch thred link">
-                            </div>
-                            <button type="submit" class="btn btn-primary">Submit</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div
+            <?php require_once __DIR__ . '/' . $contentView ?>
+        </div>
         <!-- Optional JavaScript -->
         <!-- jQuery first, then Popper.js, then Bootstrap JS -->
         <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>

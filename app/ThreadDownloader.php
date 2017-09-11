@@ -7,10 +7,11 @@ class ThreadDownloader
 
     private $host2ch = "2ch.hk";
     private $scheme2ch = "https://";
+    private $responseHandler;
 
     function __construct()
     {
-        
+        $this->responseHandler = ResponseHandler::getInstance();
     }
 
     /*
@@ -77,13 +78,10 @@ class ThreadDownloader
         curl_close($curl); // Закрываю CURL сессию
 
         if ($httpCode !== 200) {
-            echo "<br>";
-            echo "Файл не найден. Ошибка $httpCode";
+            $this->responseHandler->addError("Файл не найден. Ошибка $httpCode");
             return null;
         }
 
-        echo "<br>";
-        echo "Файл найден.";
         return $code;
     }
 
@@ -94,9 +92,10 @@ class ThreadDownloader
     public function getThreadHtmlCode($url)
     {
         if ($this->validateLink($url) === FALSE) {
-            echo "Не является ссылкой на тред: \"$url\".";
+            $this->responseHandler->addError("Не является ссылкой на тред: \"$url\".");
+            return null;
         } else {
-            echo 'Ссылка правильная.';
+            $this->responseHandler->addSuccess('Ссылка правильная.');
             $code = $this->getHtmlCodeUrl($url);
             return $code;
         }
@@ -117,13 +116,11 @@ class ThreadDownloader
         fclose($destFile);
 
         if ($httpCode !== 200) {
-            echo "<br>";
-            echo "Файл не найден. Ошибка $httpCode";
-            return null;
+            $this->responseHandler->addError("Файл не найден. Ошибка $httpCode");
+            return false;
         }
 
-        echo "<br>";
-        echo "Файл скачан.";
+        return true;
     }
 
     public function downloadImages(array $imagesLinksArray)
@@ -138,8 +135,8 @@ class ThreadDownloader
             $imagePaths = $this->parseFilePath($imageLink);
             $this->downloadFile($imagePaths["imageLink"], $imagePaths["threadIdPath"], $imagePaths["fileName"], $imagePaths["filePath"]);
         }
-        
-        
+
+
         $this->archiveFiles($threadPaths["threadIdPath"], $threadPaths["threadId"]);
     }
 
@@ -152,7 +149,7 @@ class ThreadDownloader
         $imageLink = $this->scheme2ch . $this->host2ch . $path; // Ссылка на сорцы картинки для скачивания
         $fileName = array_pop($fileNameExploded); // Имя файла с расширением       
         $filePath = $threadIdPath . "/" . $fileName; // Путь к папке для скаченных файлов
-        
+
         return array(
             "imageLink" => $imageLink,
             "threadIdPath" => $threadIdPath,
@@ -172,9 +169,10 @@ class ThreadDownloader
         }
 
         if ($zip->open($zipPath, \ZipArchive::CREATE) !== true) {
-            echo 'Ошибка. Не удалось создать архив.';
+            $this->responseHandler->addError("Не удалось создать архив.");
+            return false;
         }
-        
+
         $scandirResult = scandir($pathForArchiving);
         $filePathsArray = array();
 
@@ -192,7 +190,8 @@ class ThreadDownloader
 
         $zip->close();
 
-        echo 'Архив создан.';
+        $this->responseHandler->addSuccess('Архив создан.');
+        return true;
     }
 
 }
