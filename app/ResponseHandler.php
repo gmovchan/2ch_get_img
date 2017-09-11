@@ -2,8 +2,13 @@
 
 namespace Application;
 
+/*
+ * Обработчик результатов выполнения методов классов 
+ */
+
 class ResponseHandler
 {
+
     private static $instance;
     private $errors = array();
     private $success = array();
