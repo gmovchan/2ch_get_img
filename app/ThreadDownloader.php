@@ -130,13 +130,21 @@ class ThreadDownloader
         if (!file_exists($threadPaths["threadIdPath"])) {
             mkdir($threadPaths["threadIdPath"], 0700);
         }
+        
+        // отслеживает прогресс выполнения задачи
+        $executionStatus = new ExecutionStatus(count($imagesLinksArray));
+        $status = 0;
 
         foreach ($imagesLinksArray as $imageLink) {
             $imagePaths = $this->parseFilePath($imageLink);
             $this->downloadFile($imagePaths["imageLink"], $imagePaths["threadIdPath"], $imagePaths["fileName"], $imagePaths["filePath"]);
+            $status++;
         }
-
-
+        
+        // Получает количество успешео скачанных файлов
+        $executionStatus->setDone($status);
+        $this->responseHandler->addSuccess($executionStatus->getParts());
+        
         $this->archiveFiles($threadPaths["threadIdPath"], $threadPaths["threadId"]);
     }
 
