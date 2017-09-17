@@ -12,9 +12,9 @@ if (isset($_GET["action"])) {
     switch ($_GET["action"]) {
         case 'parse':
 
-            if (isset($_POST["input2chLink"])) {
+            if (isset($_POST["link"])) {
                 $parser = new ThreadParser;
-                $code = $parser->parseThread(new ThreadDownloader, $_POST["input2chLink"]);
+                $code = $parser->parseThread(new ThreadDownloader, $_POST["link"]);
                 
                 if ($code) {
                     $data['result']['success'] = $responseHandler->getSuccessArray();

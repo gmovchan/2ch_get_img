@@ -130,7 +130,7 @@ class ThreadDownloader
         if (!file_exists($threadPaths["threadIdPath"])) {
             mkdir($threadPaths["threadIdPath"], 0700);
         }
-        
+
         // отслеживает прогресс выполнения задачи
         $executionStatus = new ExecutionStatus(count($imagesLinksArray));
         $status = 0;
@@ -140,11 +140,11 @@ class ThreadDownloader
             $this->downloadFile($imagePaths["imageLink"], $imagePaths["threadIdPath"], $imagePaths["fileName"], $imagePaths["filePath"]);
             $status++;
         }
-        
+
         // Получает количество успешео скачанных файлов
         $executionStatus->setDone($status);
         $this->responseHandler->addSuccess($executionStatus->getParts());
-        
+
         $this->archiveFiles($threadPaths["threadIdPath"], $threadPaths["threadId"]);
     }
 
@@ -153,7 +153,7 @@ class ThreadDownloader
         $fileNameExploded = explode("/", $path);
         $threadIdArrayIndex = count($fileNameExploded) - 2;
         $threadId = $fileNameExploded[$threadIdArrayIndex]; // id треда
-        $threadIdPath = __DIR__ . "/../storage/$threadId"; // Папка для скачанных файлов
+        $threadIdPath = __DIR__ . "/../storage/threads/$threadId"; // Папка для скачанных файлов
         $imageLink = $this->scheme2ch . $this->host2ch . $path; // Ссылка на сорцы картинки для скачивания
         $fileName = array_pop($fileNameExploded); // Имя файла с расширением       
         $filePath = $threadIdPath . "/" . $fileName; // Путь к папке для скаченных файлов
@@ -167,7 +167,7 @@ class ThreadDownloader
         );
     }
 
-    public function archiveFiles(string $pathForArchiving, string $zipName)
+    public function archiveFiles(string $threadIdPath, string $zipName)
     {
         $zip = new \ZipArchive();
         $zipPath = __DIR__ . "/../storage/zip/$zipName.zip";
@@ -181,12 +181,12 @@ class ThreadDownloader
             return false;
         }
 
-        $scandirResult = scandir($pathForArchiving);
+        $scandirResult = scandir($threadIdPath);
         $filePathsArray = array();
 
         foreach ($scandirResult as $filePath) {
             if (!is_dir($filePath)) {
-                $filePathsArray[] = $pathForArchiving . "/" . $filePath;
+                $filePathsArray[] = $threadIdPath . "/" . $filePath;
             }
         }
 
@@ -197,9 +197,35 @@ class ThreadDownloader
         }
 
         $zip->close();
-
+        
+        // Удаляет папку с картинками
+        if ($this->removeDirectory($threadIdPath)) {
+            $this->responseHandler->addSuccess('Неархивированная папка удалена.');
+        } else {
+            $this->responseHandler->addError("Не удалось удалить папку: \"$threadIdPath\"");
+        }
+              
         $this->responseHandler->addSuccess('Архив создан.');
         return true;
+    }
+
+    /**
+     * Удаляет папку со всем её содержимым или файл
+     */
+    private function removeDirectory($dir)
+    {
+        if ($elements = glob($dir . "/*")) {
+
+            foreach ($elements as $element) {
+                if (is_dir($element)) {
+                    $this->removeDirectory($element);
+                } else {
+                    unlink($element);
+                }
+            }
+            
+            return rmdir($dir);
+        }
     }
 
 }
