@@ -139,10 +139,16 @@ class ThreadDownloader
             $imagePaths = $this->parseFilePath($imageLink);
             $this->downloadFile($imagePaths["imageLink"], $imagePaths["threadIdPath"], $imagePaths["fileName"], $imagePaths["filePath"]);
             $status++;
+            
+            // Записывает процесс выполнения в переменную сессии для статус-бара
+            $executionStatus->setDone($status);
+            $executionStatus->getParts();
         }
 
         // Получает количество успешео скачанных файлов
         $executionStatus->setDone($status);
+        // Сообщает в переменную сессии что скрипт завершил выполнение
+        $executionStatus->setDownloadingComplete();
         $this->responseHandler->addSuccess($executionStatus->getParts());
 
         $this->archiveFiles($threadPaths["threadIdPath"], $threadPaths["threadId"]);
@@ -197,14 +203,14 @@ class ThreadDownloader
         }
 
         $zip->close();
-        
+
         // Удаляет папку с картинками
         if ($this->removeDirectory($threadIdPath)) {
             $this->responseHandler->addSuccess('Неархивированная папка удалена.');
         } else {
             $this->responseHandler->addError("Не удалось удалить папку: \"$threadIdPath\"");
         }
-              
+
         $this->responseHandler->addSuccess('Архив создан.');
         return true;
     }
@@ -223,7 +229,7 @@ class ThreadDownloader
                     unlink($element);
                 }
             }
-            
+
             return rmdir($dir);
         }
     }

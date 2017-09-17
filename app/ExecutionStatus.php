@@ -31,7 +31,11 @@ class ExecutionStatus
      */
     public function getParts()
     {
-        return $this->done . "/" . $this->planned;
+        $parts = $this->done . "/" . $this->planned;
+        session_start();
+        $_SESSION['statusBar'] = $parts;
+        session_write_close();
+        return $parts;
     }
 
     /**
@@ -39,7 +43,18 @@ class ExecutionStatus
      */
     public function getPercentage()
     {
-        return floor(($this->done / $this->planned) * 100);
+        $percentage = floor(($this->done / $this->planned) * 100);
+        return $percentage;
+    }
+    
+    /**
+     * 
+     */
+    public function setDownloadingComplete()
+    {
+        session_start();
+        $_SESSION['downloadingComplete'] = true;
+        session_write_close();
     }
 
 }

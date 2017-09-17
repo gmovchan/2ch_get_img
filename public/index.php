@@ -5,6 +5,8 @@ namespace Application;
 require __DIR__ . '/../vendor/autoload.php';
 
 $view = new View();
+
+/*
 $responseHandler = ResponseHandler::getInstance();
 $data = array('result' => null,);
 
@@ -36,5 +38,7 @@ if (isset($_GET["action"])) {
             break;
     }
 }
+ * 
+ */
 
 $view->generate('downloadForm.php', '/indexTemplate.php');
