@@ -7,14 +7,17 @@ require __DIR__ . '/../vendor/autoload.php';
 session_start();
 
 $statusArray = array(
-    'statusBar' => '',
+    'statusBar' => 'Нет данных.',
+    'statusText' => 'Нет данных.',
     'downloadingComplete' => false
 );
 
 if (isset($_SESSION['statusBar'])) {
     $statusArray['statusBar'] = $_SESSION['statusBar'];
-} else {
-    $statusArray['statusBar'] = "Нет данных.";
+}
+
+if (isset($_SESSION['statusText'])) {
+    $statusArray['statusText'] = $_SESSION['statusText'];
 }
 
 if (isset($_SESSION['downloadingComplete'])) {

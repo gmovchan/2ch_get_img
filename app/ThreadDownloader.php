@@ -8,10 +8,12 @@ class ThreadDownloader
     private $host2ch = "2ch.hk";
     private $scheme2ch = "https://";
     private $responseHandler;
+    private $executionStatus;
 
     function __construct()
     {
         $this->responseHandler = ResponseHandler::getInstance();
+        $this->executionStatus = ExecutionStatus::getInstance();
     }
 
     /*
@@ -132,24 +134,27 @@ class ThreadDownloader
         }
 
         // отслеживает прогресс выполнения задачи
-        $executionStatus = new ExecutionStatus(count($imagesLinksArray));
+        //$executionStatus = new ExecutionStatus(count($imagesLinksArray));
+        $this->executionStatus->setPlanned(count($imagesLinksArray));
         $status = 0;
-
+        
+        $this->responseHandler->addSuccess('Идет скачивание файлов на сервер...');
+        
         foreach ($imagesLinksArray as $imageLink) {
             $imagePaths = $this->parseFilePath($imageLink);
             $this->downloadFile($imagePaths["imageLink"], $imagePaths["threadIdPath"], $imagePaths["fileName"], $imagePaths["filePath"]);
             $status++;
-            
+
             // Записывает процесс выполнения в переменную сессии для статус-бара
-            $executionStatus->setDone($status);
-            $executionStatus->getParts();
+            $this->executionStatus->setDone($status);
+            $this->executionStatus->getParts();
         }
 
         // Получает количество успешео скачанных файлов
-        $executionStatus->setDone($status);
+        $this->executionStatus->setDone($status);
         // Сообщает в переменную сессии что скрипт завершил выполнение
-        $executionStatus->setDownloadingComplete();
-        $this->responseHandler->addSuccess($executionStatus->getParts());
+        //$this->executionStatus->setDownloadingComplete();
+        //$this->responseHandler->addSuccess($this->executionStatus->getParts());
 
         $this->archiveFiles($threadPaths["threadIdPath"], $threadPaths["threadId"]);
     }
@@ -159,7 +164,7 @@ class ThreadDownloader
         $fileNameExploded = explode("/", $path);
         $threadIdArrayIndex = count($fileNameExploded) - 2;
         $threadId = $fileNameExploded[$threadIdArrayIndex]; // id треда
-        $threadIdPath = __DIR__ . "/../storage/threads/$threadId"; // Папка для скачанных файлов
+        $threadIdPath = __DIR__ . "/../public/storage/threads/$threadId"; // Папка для скачанных файлов
         $imageLink = $this->scheme2ch . $this->host2ch . $path; // Ссылка на сорцы картинки для скачивания
         $fileName = array_pop($fileNameExploded); // Имя файла с расширением       
         $filePath = $threadIdPath . "/" . $fileName; // Путь к папке для скаченных файлов
@@ -175,8 +180,10 @@ class ThreadDownloader
 
     public function archiveFiles(string $threadIdPath, string $zipName)
     {
+        $this->responseHandler->addSuccess('Архивирование...');
+        
         $zip = new \ZipArchive();
-        $zipPath = __DIR__ . "/../storage/zip/$zipName.zip";
+        $zipPath = __DIR__ . "/../public/storage/zip/$zipName.zip";
 
         if (file_exists($zipPath)) {
             $zip->open($zipPath, \ZipArchive::OVERWRITE);
@@ -195,7 +202,7 @@ class ThreadDownloader
                 $filePathsArray[] = $threadIdPath . "/" . $filePath;
             }
         }
-
+        
         foreach ($filePathsArray as $filePath) {
             $fileNameExploded = explode("/", $filePath);
             $fileName = array_pop($fileNameExploded);
@@ -220,6 +227,8 @@ class ThreadDownloader
      */
     private function removeDirectory($dir)
     {
+        $this->responseHandler->addSuccess('Очистка кэша...');
+        
         if ($elements = glob($dir . "/*")) {
 
             foreach ($elements as $element) {

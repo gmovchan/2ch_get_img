@@ -5,10 +5,12 @@ namespace Application;
 class ThreadParser
 {
     private $responseHandler;
+    private $executionStatus;
 
     function __construct()
     {
         $this->responseHandler = ResponseHandler::getInstance();
+        $this->executionStatus = ExecutionStatus::getInstance();
     }
 
     public function parseThread(ThreadDownloader $downloader, $url)
@@ -40,6 +42,10 @@ class ThreadParser
         $downloader->downloadImages($sourceImageLinks);
         
         $this->responseHandler->addSuccess("Файлы скачаны.");
+        
+        // Сообщает в переменную сессии что скрипт завершил выполнение
+        $this->executionStatus->setDownloadingComplete();
+        
         return true;
     }
 

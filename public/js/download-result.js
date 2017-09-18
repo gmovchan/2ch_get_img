@@ -1,16 +1,15 @@
 $(document).ready(function ()
 {
     document.forms.download.onsubmit = function () {
-        $(this.submit).attr("disabled", ""); // Удалить атрибут .removeAttr("title")	
-        $(this.submit).text("Загрузка...");
         AjaxFormRequest("download-result", this, "downloadAjaxHandler.php", this.submit);
 
         // Ожидает ответ скрипта по завершению его выполнения.
-        document.getElementById("download-result").innerHTML = "<p>Идёт загрузка...</p>";
-        AjaxCheckingDownloadStatusTest("execution-status", "checkingAjaxDownloadStatus.php")
+        //document.getElementById("download-result").innerHTML = "<p>Идёт загрузка...</p>";
+
+        //AjaxCheckingDownloadStatusTest("execution-status", "checkingAjaxDownloadStatus.php")
 
         var checkInterval = setInterval(function () {
-            AjaxCheckingDownloadStatus("execution-status", "checkingAjaxDownloadStatus.php", checkInterval);
+            AjaxCheckingDownloadStatus("execution-status", "download-result-string", "checkingAjaxDownloadStatus.php", checkInterval);
         }, 100);
 
         return false;
@@ -20,20 +19,26 @@ $(document).ready(function ()
      * Отправляет содержимое формы на сервер
      */
     function AjaxFormRequest(resultID, formObj, url, submit) {
+        formFieldset = $(formObj).find('fieldset');
+        formData = $(formObj).serialize(); // Жквери не сериализует формы в атрибутом desabled
+
+        formFieldset.attr("disabled", "");
+        $(formObj.submit).text("Загрузка...");
+
         $.ajax({
             url: url,
             type: "POST",
             dataType: "html",
             timeout: 600000,
-            data: $(formObj).serialize(),
+            data: formData,
             success: function (response) {
-                document.getElementById(resultID).innerHTML = document.getElementById(resultID).innerHTML + response;
-                $(submit).removeAttr("disabled"); // делает кнопку отправки формы снова активной
+                //document.getElementById(resultID).innerHTML = document.getElementById(resultID).innerHTML + response;
+                formFieldset.removeAttr("disabled"); // делает форму снова активной
                 $(submit).text("Загрузить");
             },
             error: function (response) {
-                document.getElementById(resultID).innerHTML = "Ошибка при отправке формы.";
-                $(submit).removeAttr("disabled"); // делает кнопку отправки формы снова активной
+                //document.getElementById(resultID).innerHTML = "Ошибка при отправке формы.";
+                formFieldset.removeAttr("disabled"); // делает форму снова активной
                 $(submit).text("Загрузить");
             }
         });
@@ -42,7 +47,7 @@ $(document).ready(function ()
     /**
      * Проверяет статус выполнения загрузки файлов на сервер
      */
-    function AjaxCheckingDownloadStatus(resultID, url, timerId) {
+    function AjaxCheckingDownloadStatus(resultID, resultIDStrin, url, timerId) {
         $.ajax({
             url: url,
             type: "POST",
@@ -50,14 +55,14 @@ $(document).ready(function ()
             data: '',
             success: function (response) {
                 responseJSON = JSON.parse(response);
-                /*
+
                 console.log("Интервал работает.");
                 console.log(responseJSON);
                 console.log(timerId);
-                */
-               
+
                 document.getElementById(resultID).innerHTML = "Скачано: " + responseJSON.statusBar;
-                
+                document.getElementById(resultIDStrin).innerHTML = "Выполняется: " + responseJSON.statusText;
+
                 if (responseJSON.downloadingComplete === true) {
                     clearInterval(timerId);
                 }

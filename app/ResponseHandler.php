@@ -3,7 +3,7 @@
 namespace Application;
 
 /*
- * Обработчик результатов выполнения методов классов 
+ * Обработчик результатов выполнения методов классов. Синглтон. 
  */
 
 class ResponseHandler
@@ -12,10 +12,11 @@ class ResponseHandler
     private static $instance;
     private $errors = array();
     private $success = array();
+    private $executionStatus;
 
     private function __construct()
     {
-        
+        $this->executionStatus = ExecutionStatus::getInstance();
     }
 
     public static function getInstance()
@@ -33,6 +34,7 @@ class ResponseHandler
     public function addError(string $errorString)
     {
         $this->errors[] = $errorString;
+        $this->executionStatus->setSessionVariable('statusText', $errorString);
     }
 
     public function getErrorsArray()
@@ -40,9 +42,10 @@ class ResponseHandler
         return $this->errors;
     }
 
-    public function addSuccess(string $errorString)
+    public function addSuccess(string $successString)
     {
-        $this->success[] = $errorString;
+        $this->success[] = $successString;
+        $this->executionStatus->setSessionVariable('statusText', $successString);
     }
 
     public function getSuccessArray()
