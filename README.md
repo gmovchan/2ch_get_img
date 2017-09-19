@@ -1,7 +1,7 @@
 ## Описание
 Парсер скачивает все сорцы картинок из треда, упаковывает их в архив и отдаёт пользователю.
 
-![screenshot](https://github.com/grigoryMovchan/2ch_get_img/blob/master/images/download_animation.gif)
+![screenshot](https://github.com/grigoryMovchan/2ch_get_img/blob/master/images/download_animation_0.gif)
 
 ## TODO
 
