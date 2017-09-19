@@ -3,11 +3,6 @@ $(document).ready(function ()
     document.forms.download.onsubmit = function () {
         AjaxFormRequest("download-result", this, "downloadAjaxHandler.php", this.submit);
 
-        // Ожидает ответ скрипта по завершению его выполнения.
-        //document.getElementById("download-result").innerHTML = "<p>Идёт загрузка...</p>";
-
-        //AjaxCheckingDownloadStatusTest("execution-status", "checkingAjaxDownloadStatus.php")
-
         var checkInterval = setInterval(function () {
             AjaxCheckingDownloadStatus("execution-status", "download-result-string", "checkingAjaxDownloadStatus.php", checkInterval);
         }, 100);
@@ -59,32 +54,31 @@ $(document).ready(function ()
                 console.log("Интервал работает.");
                 console.log(responseJSON);
                 console.log(timerId);
-
-                document.getElementById(resultID).innerHTML = "Скачано: " + responseJSON.statusBar;
-                document.getElementById(resultIDStrin).innerHTML = "Выполняется: " + responseJSON.statusText;
+                
+                if (responseJSON.statusBar !== null) {
+                    document.getElementById(resultID).innerHTML = "Скачано " + responseJSON.statusBar + " файлов.";
+                } else {
+                    document.getElementById(resultID).innerHTML = "";
+                }
+                
+                if (responseJSON.statusText !== null) {
+                    document.getElementById(resultIDStrin).innerHTML = responseJSON.statusText;
+                } else {
+                    document.getElementById(resultIDStrin).innerHTML = "";
+                }
+                
+                /*
+                document.getElementById(resultID).innerHTML = "Скачано " + responseJSON.statusBar + " файлов.";
+                document.getElementById(resultIDStrin).innerHTML = responseJSON.statusText;
+                */
 
                 if (responseJSON.downloadingComplete === true) {
                     clearInterval(timerId);
                 }
             },
             error: function (response) {
-                document.getElementById(resultID).innerHTML = "Не удалось получить статус выполнения.";
+                document.getElementById(resultID).innerHTML = "Не удалось получить ответ от сервера.";
                 clearInterval(timerId);
-            }
-        });
-    }
-
-    function AjaxCheckingDownloadStatusTest(resultID, url) {
-        $.ajax({
-            url: url,
-            type: "POST",
-            dataType: "html",
-            data: true,
-            success: function (response) {
-                document.getElementById(resultID).innerHTML = "Скачано: " + response;
-            },
-            error: function (response) {
-                document.getElementById(resultID).innerHTML = "Не удалось получить статус выполнения.";
             }
         });
     }
