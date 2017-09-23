@@ -127,6 +127,8 @@ class ThreadDownloader
 
     public function downloadImages(array $imagesLinksArray)
     {
+        //var_dump($imagesLinksArray);
+        
         $threadPaths = $this->parseFilePath($imagesLinksArray[0]);
 
         if (!file_exists($threadPaths["threadIdPath"])) {
@@ -142,7 +144,12 @@ class ThreadDownloader
         
         foreach ($imagesLinksArray as $imageLink) {
             $imagePaths = $this->parseFilePath($imageLink);
-            $this->downloadFile($imagePaths["imageLink"], $imagePaths["threadIdPath"], $imagePaths["fileName"], $imagePaths["filePath"]);
+            
+            // Стикеры не будут скачиваться
+            if (!is_null($imagePaths["imageLink"])) {
+                $this->downloadFile($imagePaths["imageLink"], $imagePaths["threadIdPath"], $imagePaths["fileName"], $imagePaths["filePath"]);
+            }
+            
             $status++;
 
             // Записывает процесс выполнения в переменную сессии для статус-бара
@@ -154,7 +161,7 @@ class ThreadDownloader
         $this->executionStatus->setDone($status);
         // Сообщает в переменную сессии что скрипт завершил выполнение
         //$this->executionStatus->setDownloadingComplete();
-        //$this->responseHandler->addSuccess($this->executionStatus->getParts());
+        $this->responseHandler->addSuccess($this->executionStatus->getParts());
 
         $this->archiveFiles($threadPaths["threadIdPath"], $threadPaths["threadId"]);
     }
@@ -165,7 +172,14 @@ class ThreadDownloader
         $threadIdArrayIndex = count($fileNameExploded) - 2;
         $threadId = $fileNameExploded[$threadIdArrayIndex]; // id треда
         $threadIdPath = __DIR__ . "/../public/storage/threads/$threadId"; // Папка для скачанных файлов
-        $imageLink = $this->scheme2ch . $this->host2ch . $path; // Ссылка на сорцы картинки для скачивания
+        
+        // Стикеры не будут скачиваться
+        if ($fileNameExploded[2] !== "src") {
+            $imageLink = null; 
+        } else {
+            $imageLink = $this->scheme2ch . $this->host2ch . $path; // Ссылка на сорцы картинки для скачивания
+        }
+        
         $fileName = array_pop($fileNameExploded); // Имя файла с расширением       
         $filePath = $threadIdPath . "/" . $fileName; // Путь к папке для скаченных файлов
 

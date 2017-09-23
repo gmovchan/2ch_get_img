@@ -4,6 +4,7 @@ namespace Application;
 
 class ThreadParser
 {
+
     private $responseHandler;
     private $executionStatus;
 
@@ -23,14 +24,14 @@ class ThreadParser
         $dom = new \DOMDocument();
         libxml_use_internal_errors(true); // скрывает сообщения об ошибках HTML
         $dom->loadHTML($code);
-                
+
         $nodes = $dom->getElementsByTagName("div");
         $sourceImageLinks = array();
 
         foreach ($nodes as $element) {
             $classy = $element->getAttribute("class");
 
-            if (strpos($classy, "image") !== false) {
+            if (strpos($classy, "image-link") !== false) {
                 $tagsA = $element->getElementsByTagName("a");
 
                 foreach ($tagsA as $tagA) {
@@ -38,14 +39,14 @@ class ThreadParser
                 }
             }
         }
-        
+
         $downloader->downloadImages($sourceImageLinks);
-        
+
         $this->responseHandler->addSuccess("Файлы скачаны.");
-        
+
         // Сообщает в переменную сессии что скрипт завершил выполнение
         $this->executionStatus->setDownloadingComplete();
-        
+
         return true;
     }
 
