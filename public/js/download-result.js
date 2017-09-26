@@ -54,23 +54,29 @@ $(document).ready(function ()
                 console.log("Интервал работает.");
                 console.log(responseJSON);
                 console.log(timerId);
-                
+
                 if (responseJSON.statusBar !== null) {
                     document.getElementById(resultID).innerHTML = "Скачано " + responseJSON.statusBar + " файлов.";
+
+                    if (responseJSON.archiveFileName !== null) {
+                        console.log(" <a href=\"/output.php?filename=" + responseJSON.archiveFileName + "\>Скачать архив.</a>");
+                        document.getElementById(resultID).innerHTML = document.getElementById(resultID).innerHTML + " <a href=\"/output.php?filename=" + responseJSON.archiveFileName + "\">Скачать архив.</a>";
+                    }
+
                 } else {
                     document.getElementById(resultID).innerHTML = "";
                 }
-                
+
                 if (responseJSON.statusText !== null) {
                     document.getElementById(resultIDStrin).innerHTML = responseJSON.statusText;
                 } else {
                     document.getElementById(resultIDStrin).innerHTML = "";
                 }
-                
+
                 /*
-                document.getElementById(resultID).innerHTML = "Скачано " + responseJSON.statusBar + " файлов.";
-                document.getElementById(resultIDStrin).innerHTML = responseJSON.statusText;
-                */
+                 document.getElementById(resultID).innerHTML = "Скачано " + responseJSON.statusBar + " файлов.";
+                 document.getElementById(resultIDStrin).innerHTML = responseJSON.statusText;
+                 */
 
                 if (responseJSON.downloadingComplete === true) {
                     clearInterval(timerId);

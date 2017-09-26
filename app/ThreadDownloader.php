@@ -128,7 +128,7 @@ class ThreadDownloader
     public function downloadImages(array $imagesLinksArray)
     {
         //var_dump($imagesLinksArray);
-        
+
         $threadPaths = $this->parseFilePath($imagesLinksArray[0]);
 
         if (!file_exists($threadPaths["threadIdPath"])) {
@@ -139,17 +139,17 @@ class ThreadDownloader
         //$executionStatus = new ExecutionStatus(count($imagesLinksArray));
         $this->executionStatus->setPlanned(count($imagesLinksArray));
         $status = 0;
-        
+
         $this->responseHandler->addSuccess('Идет скачивание файлов на сервер...');
-        
+
         foreach ($imagesLinksArray as $imageLink) {
             $imagePaths = $this->parseFilePath($imageLink);
-            
+
             // Стикеры не будут скачиваться
             if (!is_null($imagePaths["imageLink"])) {
                 $this->downloadFile($imagePaths["imageLink"], $imagePaths["threadIdPath"], $imagePaths["fileName"], $imagePaths["filePath"]);
             }
-            
+
             $status++;
 
             // Записывает процесс выполнения в переменную сессии для статус-бара
@@ -172,14 +172,13 @@ class ThreadDownloader
         $threadIdArrayIndex = count($fileNameExploded) - 2;
         $threadId = $fileNameExploded[$threadIdArrayIndex]; // id треда
         $threadIdPath = __DIR__ . "/../public/storage/threads/$threadId"; // Папка для скачанных файлов
-        
         // Стикеры не будут скачиваться
         if ($fileNameExploded[2] !== "src") {
-            $imageLink = null; 
+            $imageLink = null;
         } else {
             $imageLink = $this->scheme2ch . $this->host2ch . $path; // Ссылка на сорцы картинки для скачивания
         }
-        
+
         $fileName = array_pop($fileNameExploded); // Имя файла с расширением       
         $filePath = $threadIdPath . "/" . $fileName; // Путь к папке для скаченных файлов
 
@@ -195,7 +194,7 @@ class ThreadDownloader
     public function archiveFiles(string $threadIdPath, string $zipName)
     {
         $this->responseHandler->addSuccess('Архивирование...');
-        
+
         $zip = new \ZipArchive();
         $zipPath = __DIR__ . "/../public/storage/zip/$zipName.zip";
 
@@ -216,7 +215,7 @@ class ThreadDownloader
                 $filePathsArray[] = $threadIdPath . "/" . $filePath;
             }
         }
-        
+
         foreach ($filePathsArray as $filePath) {
             $fileNameExploded = explode("/", $filePath);
             $fileName = array_pop($fileNameExploded);
@@ -225,8 +224,10 @@ class ThreadDownloader
 
         $zip->close();
 
+        $this->executionStatus->setSessionVariable("archiveFileName", "$zipName.zip");
+
         // Удаляет папку с картинками
-        if ($this->removeDirectory($threadIdPath)) {
+        if ($this->removeFileOrDirectory($threadIdPath)) {
             $this->responseHandler->addSuccess('Неархивированная папка удалена.');
         } else {
             $this->responseHandler->addError("Не удалось удалить папку: \"$threadIdPath\"");
@@ -239,22 +240,61 @@ class ThreadDownloader
     /**
      * Удаляет папку со всем её содержимым или файл
      */
-    private function removeDirectory($dir)
+    private function removeFileOrDirectory($path)
     {
         $this->responseHandler->addSuccess('Очистка кэша...');
-        
-        if ($elements = glob($dir . "/*")) {
+
+        if (is_file($path)) {
+            return unlink($path);
+        }
+
+        if ($elements = glob($path . "/*")) {
 
             foreach ($elements as $element) {
                 if (is_dir($element)) {
-                    $this->removeDirectory($element);
+                    $this->removeFileOrDirectory($element);
                 } else {
                     unlink($element);
                 }
             }
 
-            return rmdir($dir);
+            return rmdir($path);
         }
+    }
+
+    public function outputsFile(string $filename)
+    {
+        $filePath = __DIR__ . "/../public/storage/zip/$filename";
+
+        //var_dump(filesize($filePath));
+
+        if (!file_exists($filePath)) {
+            echo "Не удалось найти файл \"$filename\"";
+            exit();
+        }
+
+        // Сбрасывает буфер вывода ПХП, чтобы избежать переполнения памяти выделенной под скрипт
+        // Если этого не сделать файл будет читаться в память полностью!
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        header('Content-Description: File Transfer');
+        header('Content_type: application/zip');
+        header('Content-Disposition: attachment; filename=' . basename($filePath));
+        header('Content-Transfer-Encoding: binary');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . filesize($filePath));
+        // Читает файл и отправляет его пользователю
+        // Удаляет архив если он был скачан
+        if (readfile($filePath)) {
+            $this->removeFileOrDirectory($filePath);
+            //echo 'Файл успешно скачан';
+        }
+
+        exit();
     }
 
 }
